@@ -19,10 +19,25 @@ jobs:
         id: version
         run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build module
+        env:
+          GH_PROJECT: ssjmarx/foundryvtt-gold-api
+          GH_TAG: ${{ steps.version.outputs.VERSION }}
+          CI: true
+        run: npm run build
+
       - name: Create module.zip
         run: |
-          # Create a zip file excluding .git, .github, and the .desktop file
-          zip -r module.zip . -x ".git/*" ".github/*" "*.desktop"
+          # Create a zip file from the dist directory
+          cd dist && zip -r ../module.zip .
 
       - name: Generate module.json with correct URLs
         run: |
