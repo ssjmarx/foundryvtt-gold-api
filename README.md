@@ -4,7 +4,7 @@
 Based on [ThreeHats/foundryvtt-rest-api](https://github.com/ThreeHats/foundryvtt-rest-api)
 
 ## Latest Release
-**Install Module**: [v2.0.3](https://github.com/ssjmarx/foundryvtt-gold-api/releases/download/v2.0.3/module.json)
+https://github.com/ssjmarx/foundryvtt-gold-api/releases/latest/download/module.json
 
 ## New Features
 
