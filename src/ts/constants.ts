@@ -85,7 +85,7 @@ export const SETTINGS = {
             scope: "world",
             config: true,
             type: String,
-            default: "wss://foundryvtt-rest-api-relay.fly.dev",
+            default: "http://localhost:3010",
             requiresReload: true
         },
 
