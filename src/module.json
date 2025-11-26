@@ -1,17 +1,21 @@
 {
   "id": "foundry-rest-api",
-  "title": "Foundry REST API",
-  "description": "Adds rest endpoint to get data from FoundryVTT",
-  "version": "1.0.1",
+  "title": "Foundry VTT Gold API",
+  "description": "Adds rest endpoint to get data from FoundryVTT with enhanced chat features",
+  "version": "2.0.2",
   "authors": [
+      {
+          "name": "ssjmarx",
+          "url": "https://github.com/ssjmarx"
+      },
       {
           "name": "ThreeHats",
           "url": "https://github.com/ThreeHats"
       }
   ],
   "license": "MIT",
-  "url": "https://github.com/ThreeHats/foundryvtt-rest-api",
-  "bugs": "https://github.com/ThreeHats/foundryvtt-rest-api/issues",
+  "url": "https://github.com/ssjmarx/foundryvtt-gold-api",
+  "bugs": "https://github.com/ssjmarx/foundryvtt-gold-api/issues",
   "compatibility": {
     "minimum": "12",
     "verified": "13"
