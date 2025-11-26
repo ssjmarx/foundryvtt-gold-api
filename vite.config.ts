@@ -25,8 +25,8 @@ const foundryVttDataPath = foundtyVttDataModulesPath??path.join(
   "modules"
 );
 
-// Ensure the Foundry VTT modules directory exists
-async function ensureDirectory(directoryPath) {
+// Ensure Foundry VTT modules directory exists
+async function ensureDirectory(directoryPath: string) {
   try {
     await fsPromises.mkdir(directoryPath, { recursive: true });
   } catch (error) {
@@ -43,11 +43,11 @@ if (!process.env.CI) {
 export default defineConfig({
   build: {
     sourcemap: true,
-    outDir: "dist",
+    outDir: process.env.CI ? "dist" : path.join(foundryVttDataPath, moduleId),
     rollupOptions: {
       input: "src/ts/module.ts",
       output: {
-        dir: process.env.CI ? "dist/scripts" : path.join(foundryVttDataPath, moduleId, "scripts"),
+        dir: process.env.CI ? "dist/scripts" : "scripts",
         entryFileNames: "module.js",
         format: "es",
       },
@@ -63,7 +63,7 @@ export default defineConfig({
           await ensureDirectory(moduleDir);
           await fsPromises.writeFile(path.join(moduleDir, "style.css"), styles);
         }
-        // Always write to dist for CI
+        // Always write to dist for CI/production
         await ensureDirectory("dist/styles");
         await fsPromises.writeFile("dist/styles/style.css", styles);
       },
