@@ -2,7 +2,7 @@
   "id": "foundry-rest-api",
   "title": "Foundry VTT Gold API",
   "description": "Adds rest endpoint to get data from FoundryVTT with enhanced chat features",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "authors": [
       {
           "name": "ssjmarx",
