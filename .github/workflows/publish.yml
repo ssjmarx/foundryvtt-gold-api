@@ -3,7 +3,7 @@ name: Publish Module
 on:
   push:
     tags:
-      - '*.*.*'
+      - '*'
 
 permissions:
   contents: write
