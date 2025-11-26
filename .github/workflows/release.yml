@@ -1,0 +1,56 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Create module.zip
+        run: |
+          # Create a zip file excluding .git, .github, and the .desktop file
+          zip -r module.zip . -x ".git/*" ".github/*" "*.desktop"
+
+      - name: Generate module.json with correct URLs
+        run: |
+          # Update the manifest and download URLs in module.json
+          sed -i "s|https://github.com/ssjmarx/foundryvtt-gold-api/releases/latest/download/module.json|https://github.com/ssjmarx/foundryvtt-gold-api/releases/download/${{ steps.version.outputs.VERSION }}/module.json|g" src/module.json
+          sed -i "s|https://github.com/ssjmarx/foundryvtt-gold-api/releases/latest/download/module.zip|https://github.com/ssjmarx/foundryvtt-gold-api/releases/download/${{ steps.version.outputs.VERSION }}/module.zip|g" src/module.json
+
+      - name: Copy files for release
+        run: cp src/module.json module.json
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.VERSION }}
+          name: Foundry VTT Gold API ${{ steps.version.outputs.VERSION }}
+          draft: false
+          prerelease: false
+          body: |
+            ## Foundry VTT Gold API ${{ steps.version.outputs.VERSION }}
+            
+            ### Installation
+            Add the following URL to Foundry VTT's Module Management:
+            ```
+            https://github.com/ssjmarx/foundryvtt-gold-api/releases/download/${{ steps.version.outputs.VERSION }}/module.json
+            ```
+            
+            ### Changes
+            See [README.md](https://github.com/ssjmarx/foundryvtt-gold-api/blob/main/README.md) for detailed changes.
+          files: |
+            module.json
+            module.zip
