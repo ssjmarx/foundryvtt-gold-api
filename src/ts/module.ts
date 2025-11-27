@@ -1,6 +1,6 @@
 import "../styles/style.scss";
 import { FoundryRestApi } from "./types";
-import { moduleId, recentRolls, MAX_ROLLS_STORED, CONSTANTS, SETTINGS } from "./constants";
+import { moduleId, recentRolls, CONSTANTS, SETTINGS } from "./constants";
 
 // Chat message storage
 declare global {
@@ -236,7 +236,7 @@ Hooks.once("ready", () => {
   // Populate chat messages from existing Foundry chat log
   try {
     const chatMessages = game.messages?.contents || [];
-    ModuleLogger.info(`Found ${chatMessages.length} existing chat messages to populate recentChatMessages`);
+    ModuleLogger.info(`Found ${chatMessages.length} existing chat messages to populate recentChatMessages and recentRolls`);
     
     // Convert existing chat messages to our format
     chatMessages.forEach((message: any) => {
@@ -268,18 +268,64 @@ Hooks.once("ready", () => {
         } else {
           (window as any).recentChatMessages.unshift(chatData);
         }
+      } else if (message.isRoll && message.rolls?.length > 0) {
+        // Populate recentRolls from historical roll messages
+        const rollId = message.id;
+        
+        // Format roll data to match the format used in createChatMessage hook
+        const rollData = {
+          id: rollId,
+          messageId: message.id,
+          user: {
+            id: message.user?.id,
+            name: message.user?.name
+          },
+          speaker: message.speaker,
+          flavor: message.flavor || "",
+          rollTotal: message.rolls[0].total,
+          formula: message.rolls[0].formula,
+          isCritical: message.rolls[0].isCritical || false,
+          isFumble: message.rolls[0].isFumble || false,
+          dice: message.rolls[0].dice?.map((d: any) => ({
+            faces: d.faces,
+            results: d.results.map((r: any) => ({
+              result: r.result,
+              active: r.active
+            }))
+          })),
+          timestamp: message.timestamp || Date.now()
+        };
+        
+        // Check if this roll ID already exists in recentRolls
+        const existingIndex = recentRolls.findIndex(roll => roll.id === rollId);
+        if (existingIndex !== -1) {
+          // If it exists, update it instead of adding a new entry
+          recentRolls[existingIndex] = rollData;
+        } else {
+          // Add to recent rolls
+          recentRolls.unshift(rollData);
+        }
+        
+        ModuleLogger.debug(`Populated historical roll: ${rollData.formula} = ${rollData.rollTotal} from ${rollData.user?.name}`);
       }
     });
     
-    // Limit storage size
+    // Limit storage size for chat messages
     const maxStored = 100;
     if ((window as any).recentChatMessages.length > maxStored) {
       (window as any).recentChatMessages.length = maxStored;
     }
     
+    // Limit storage size for rolls
+    const maxRollsStored = game.settings.get(moduleId, SETTINGS.MAX_ROLLS_STORED) as number;
+    if (recentRolls.length > maxRollsStored) {
+      recentRolls.length = maxRollsStored;
+    }
+    
     ModuleLogger.info(`Populated recentChatMessages with ${(window as any).recentChatMessages.length} messages from existing chat log`);
+    ModuleLogger.info(`Populated recentRolls with ${recentRolls.length} rolls from existing chat log`);
   } catch (error) {
-    ModuleLogger.error(`Error populating chat messages from existing log:`, error);
+    ModuleLogger.error(`Error populating chat messages and rolls from existing log:`, error);
   }
   
   setTimeout(() => {
@@ -368,8 +414,9 @@ Hooks.on("createChatMessage", (message: any) => {
       recentRolls.unshift(rollData);
       
       // Trim the array if needed
-      if (recentRolls.length > MAX_ROLLS_STORED) {
-        recentRolls.length = MAX_ROLLS_STORED;
+      const maxRollsStored = game.settings.get(moduleId, SETTINGS.MAX_ROLLS_STORED) as number;
+      if (recentRolls.length > maxRollsStored) {
+        recentRolls.length = maxRollsStored;
       }
     }
     

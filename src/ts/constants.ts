@@ -22,6 +22,7 @@ export const SETTINGS = {
     PING_INTERVAL: "pingInterval",
     RECONNECT_MAX_ATTEMPTS: "reconnectMaxAttempts",
     RECONNECT_BASE_DELAY: "reconnectBaseDelay",
+    MAX_ROLLS_STORED: "maxRollsStored",
 
     // Hidden settings
     SYSTEM_FOUND: "systemFound",
@@ -157,6 +158,21 @@ export const SETTINGS = {
             type: Number,
             default: 1000,
             requiresReload: true
+        },
+
+        [SETTINGS.MAX_ROLLS_STORED]: {
+            name: "Maximum Rolls Stored",
+            hint: "Maximum number of recent rolls to store in memory",
+            scope: "world",
+            config: true,
+            type: Number,
+            default: 20,
+            range: {
+                min: 5,
+                max: 100,
+                step: 1
+            },
+            requiresReload: false
         }
     })
 };
