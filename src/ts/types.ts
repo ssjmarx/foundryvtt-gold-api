@@ -21,6 +21,7 @@ export interface FoundryRestApiAPI {
   getWebSocketManager: () => WebSocketManager | null;
   search: (query: string, filter?: string) => Promise<any[]>;
   getByUuid: (uuid: string) => Promise<any>;
+  getChatMessages: (limit?: number) => any[];
 }
 
 export interface WebSocketMessage {

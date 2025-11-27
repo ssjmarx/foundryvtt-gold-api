@@ -1,6 +1,11 @@
 import "../styles/style.scss";
 import { FoundryRestApi } from "./types";
 import { moduleId, recentRolls, MAX_ROLLS_STORED, CONSTANTS, SETTINGS } from "./constants";
+
+// Chat message storage
+declare global {
+  var recentChatMessages: any[];
+}
 import { ModuleLogger } from "./utils/logger";
 import { initializeWebSocket } from "./network/webSocketEndpoints";
 
@@ -64,6 +69,12 @@ Hooks.once("init", () => {
         ModuleLogger.error(`Error getting entity by UUID:`, error);
         return null;
       }
+    },
+    getChatMessages: (limit: number = 50) => {
+      ModuleLogger.info(`getChatMessages called with limit: ${limit}`);
+      // This will be populated by the chat message collection hook
+      // The actual messages are stored in the recentChatMessages array in the compiled module
+      return (window as any).recentChatMessages?.slice(0, limit) || [];
     }
   };
 });
@@ -217,12 +228,57 @@ Hooks.on("renderSettingsConfig", (_: SettingsConfig, html: JQuery | HTMLElement)
 });
 
 Hooks.once("ready", () => {
+  // Initialize chat messages array
+  if (!(window as any).recentChatMessages) {
+    (window as any).recentChatMessages = [];
+  }
+  
   setTimeout(() => {
     initializeWebSocket();
   }, 1000);
 });
 
 Hooks.on("createChatMessage", (message: any) => {
+  // Handle chat messages (non-rolls)
+  if (!message.isRoll) {
+    ModuleLogger.info(`Collecting chat message from ${message.user?.name || 'unknown'}`);
+    
+    const chatData = {
+      id: message.id,
+      messageId: message.id,
+      user: {
+        id: message.user?.id,
+        name: message.user?.name
+      },
+      content: message.content,
+      flavor: message.flavor || "",
+      type: message.type || "player-chat",
+      timestamp: Date.now(),
+      speaker: message.speaker,
+      whisper: message.whisper || [],
+      blind: message.blind || false
+    };
+    
+    // Add to global chat messages array
+    if (!(window as any).recentChatMessages) {
+      (window as any).recentChatMessages = [];
+    }
+    
+    const existingIndex = (window as any).recentChatMessages.findIndex((m: any) => m.id === message.id);
+    if (existingIndex !== -1) {
+      (window as any).recentChatMessages[existingIndex] = chatData;
+    } else {
+      (window as any).recentChatMessages.unshift(chatData);
+    }
+    
+    // Limit storage size
+    const maxStored = 100;
+    if ((window as any).recentChatMessages.length > maxStored) {
+      (window as any).recentChatMessages.length = maxStored;
+    }
+  }
+  
+  // Handle rolls
   if (message.isRoll && message.rolls?.length > 0) {
     ModuleLogger.info(`Detected dice roll from ${message.user?.name || 'unknown'}`);
     
