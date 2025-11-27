@@ -233,6 +233,55 @@ Hooks.once("ready", () => {
     (window as any).recentChatMessages = [];
   }
   
+  // Populate chat messages from existing Foundry chat log
+  try {
+    const chatMessages = game.messages?.contents || [];
+    ModuleLogger.info(`Found ${chatMessages.length} existing chat messages to populate recentChatMessages`);
+    
+    // Convert existing chat messages to our format
+    chatMessages.forEach((message: any) => {
+      if (!message.isRoll) {
+        const chatData = {
+          id: message.id,
+          messageId: message.id,
+          user: {
+            id: message.user?.id,
+            name: message.user?.name
+          },
+          content: message.content,
+          flavor: message.flavor || "",
+          type: message.type || "player-chat",
+          timestamp: message.timestamp || Date.now(),
+          speaker: message.speaker,
+          whisper: message.whisper || [],
+          blind: message.blind || false
+        };
+        
+        // Add to global chat messages array
+        if (!(window as any).recentChatMessages) {
+          (window as any).recentChatMessages = [];
+        }
+        
+        const existingIndex = (window as any).recentChatMessages.findIndex((m: any) => m.id === message.id);
+        if (existingIndex !== -1) {
+          (window as any).recentChatMessages[existingIndex] = chatData;
+        } else {
+          (window as any).recentChatMessages.unshift(chatData);
+        }
+      }
+    });
+    
+    // Limit storage size
+    const maxStored = 100;
+    if ((window as any).recentChatMessages.length > maxStored) {
+      (window as any).recentChatMessages.length = maxStored;
+    }
+    
+    ModuleLogger.info(`Populated recentChatMessages with ${(window as any).recentChatMessages.length} messages from existing chat log`);
+  } catch (error) {
+    ModuleLogger.error(`Error populating chat messages from existing log:`, error);
+  }
+  
   setTimeout(() => {
     initializeWebSocket();
   }, 1000);
